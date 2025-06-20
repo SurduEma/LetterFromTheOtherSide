@@ -7,11 +7,10 @@ public class ObjectGrabber : MonoBehaviour
     public LayerMask grabLayer;
     public float scaleMultiplier = 1.5f;
     public float minScale = 0.3f;
-    public float maxScale = 6f;
+    public float maxScale = 5f;
 
     private GameObject heldObject;
     private Rigidbody heldRigidbody;
-    private float grabStartDistance;
 
     void Update()
     {
@@ -37,7 +36,6 @@ public class ObjectGrabber : MonoBehaviour
             if (hit.collider.CompareTag("Grabbable"))
             {
                 heldObject = hit.collider.gameObject;
-                grabStartDistance = hit.distance;
 
                 heldRigidbody = heldObject.GetComponent<Rigidbody>();
                 if (heldRigidbody != null)
@@ -57,19 +55,20 @@ public class ObjectGrabber : MonoBehaviour
 
     void ResizeAndHoldObject()
     {
-        // Get vertical look direction (up/down)
-        float cameraPitch = playerCamera.transform.forward.y;
+        // 1. Calculate how high you're looking
+        float cameraPitch = playerCamera.transform.forward.y; // -1 (looking down) to +1 (looking up)
+
+        // 2. Convert to a 0–1 scale
         float t = Mathf.InverseLerp(-1f, 1f, cameraPitch);
+
+        // 3. Map to scale range
         float scaleFactor = Mathf.Lerp(minScale, maxScale, t);
 
-        // Apply scale FIRST
+        // 4. Apply scale
         heldObject.transform.localScale = Vector3.one * scaleFactor;
 
-        // Then position it at a safe distance based on its size
-        float safeDistance = holdDistance + scaleFactor * 0.5f; // offset to avoid clipping
-        Vector3 holdPosition = playerCamera.transform.position + playerCamera.transform.forward * safeDistance;
+        // 5. Position it in front of camera at fixed distance
+        Vector3 holdPosition = playerCamera.transform.position + playerCamera.transform.forward * (holdDistance + scaleFactor * 0.5f);
         heldObject.transform.position = holdPosition;
     }
-
-
 }
